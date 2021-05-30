@@ -1,45 +1,42 @@
-function isBetween(l: number, min: number, max: number){
-  return min <= l && l <= max;
-}
-
 export type TPlotterParams = {
-  start_time: string;
-  k: string;
+  start_time: Date;
+  k: number;
   pool_public_key: string;
   farmer_public_key: string;
   memo: string;
   temp1_dir: string;
   temp2_dir: string;
   id: string;
-  buffer_size: string;
-  buckets: string;
+  buffer_size: [number, string];
+  buckets: number;
   final_dir: string;
   threads: number;
   stripe_size: number;
   process_id: string;
 };
-
 export type TBucketInfo = {
-  bucket: string;
+  bucket: number;
   sort: string;
-  ram: string;
-  u_sort_min: string;
-  qs_min: string;
+  ram: [number, string];
+  u_sort_min: [number, string];
+  qs_min: [number, string];
   force_qs?: string;
 };
 export type TComplete = {
-  time: string;
-  cpu: string;
-  date: string;
+  time: number;
+  cpu: number;
+  date: Date;
 };
 export type TPhase1BucketProgress = {
   bucketInfo: TBucketInfo[];
-  total_matches: string;
+  total_matches: number;
   complete: TComplete;
 };
 export type TPhase1 = {
-  start_date: string;
-  f1_complete: TComplete;
+  start_date: Date;
+  table1: {
+    f1_complete: TComplete;
+  };
   table2: Partial<TPhase1BucketProgress>;
   table3: Partial<TPhase1BucketProgress>;
   table4: Partial<TPhase1BucketProgress>;
@@ -49,27 +46,27 @@ export type TPhase1 = {
   complete: TComplete;
 };
 export type TPhase2 = {
-  start_date: string;
-  table2: TComplete;
-  table3: TComplete;
-  table4: TComplete;
-  table5: TComplete;
-  table6: TComplete;
+  start_date: Date;
   table7: TComplete;
-  table1_new_size: string;
+  table6: TComplete;
+  table5: TComplete;
+  table4: TComplete;
+  table3: TComplete;
+  table2: TComplete;
+  table1_new_size: number;
   complete: TComplete;
-  wrote: string;
+  wrote: number;
 };
 export type TPhase3BucketProgress = {
   bucketInfo: TBucketInfo[];
   firstComputationSummary: TComplete;
   secondComputationSummary: TComplete;
   totalCompressSummary: TComplete;
-  wrote: string;
+  wrote: number;
 };
 export type TPhase3 = {
   tmp_path: string;
-  start_date: string;
+  start_date: Date;
   table1and2: Partial<TPhase3BucketProgress>;
   table2and3: Partial<TPhase3BucketProgress>;
   table3and4: Partial<TPhase3BucketProgress>;
@@ -79,10 +76,49 @@ export type TPhase3 = {
   complete: TComplete;
 };
 export type TPhase4 = {
-  // Todo implement here.
+  tmp_path: string;
+  start_date: Date;
+  bucketInfo: TBucketInfo[];
+  P1: string;
+  P2: string;
+  P3: string;
+  P4: string;
+  P5: string;
+  P6: string;
+  P7: string;
+  C1: string;
+  C2: string;
+  C3: string;
+  complete: TComplete;
+};
+export type TPhaseSummary = {
+  approximate_working_space_used: [number, string];
+  final_file_size: [number, string];
+  complete: TComplete;
+  finished_time: Date;
+};
+export type TCopyPhase = {
+  from: string;
+  to: string;
+  complete: TComplete;
+  removed_temp2_file: string;
+  renamed_final_file: {
+    from: string;
+    to: string;
+  }
 };
 
-export function analyze(log: string){
+export type TParsed = {
+  params: Partial<TPlotterParams>;
+  phase1: Partial<TPhase1>;
+  phase2: Partial<TPhase2>;
+  phase3: Partial<TPhase3>;
+  phase4: Partial<TPhase4>;
+  phaseSummary: Partial<TPhaseSummary>;
+  copyPhase: Partial<TCopyPhase>;
+};
+
+export function parse(log: string): TParsed {
   const lines = log.split(/\r?\n/);
   const maxLine = lines.length;
   
@@ -90,8 +126,9 @@ export function analyze(log: string){
   const phase1: Partial<TPhase1> = {};
   const phase2: Partial<TPhase2> = {};
   const phase3: Partial<TPhase3> = {};
-  const phase4: Record<string, unknown> = {};
-  const result: Record<string, unknown> = {};
+  const phase4: Partial<TPhase4> = {};
+  const phaseSummary: Partial<TPhaseSummary> = {};
+  const copyPhase: Partial<TCopyPhase> = {};
   
   let currentPhase = "starting";
   let subState = "";
@@ -101,16 +138,16 @@ export function analyze(log: string){
     const line = lines[l];
   
     if(currentPhase === "starting"){
-      const regex = /^(\d{4}-\d{2}-\d{2}T\d{2}:d{2}:d{2}.\d{3})\s+chia\.plottting.create_plots\s+INFO\s+\[0m\s+Creating\s+(\d+)\s+plots of size\s+(\d+),\s+pool public key:\s+([a-fA-F0-9]+)\s+farmer public key:\s+([a-fA-F0-9]+)\s+\[0m$/;
+      const regex = /^(.+?)\s+chia.+Creating\s+(\d+)\s+plots of size\s+(\d+),\s+pool public key:\s+([a-fA-F0-9]+)\s+farmer public key:\s+([a-fA-F0-9]+).+$/;
       let match = regex.exec(line);
       if(match){
-        params.start_time = match[1];
-        params.k = match[3];
+        params.start_time = new Date(match[1]);
+        params.k = +match[3];
         params.pool_public_key = match[4];
         params.farmer_public_key = match[5];
         continue;
       }
-      const regex2 = /^(\d{4}-\d{2}-\d{2}T\d{2}:d{2}:d{2}.\d{3})\s+chia\.plottting.create_plots\s+INFO\s+\[0m\s+Memo:\s+([a-fA-F0-9]+)\s+\[0m$/;
+      const regex2 = /^(.+?)\s+chia.+INFO.+Memo:\s+([a-fA-F0-9]+).+$/;
       match = regex2.exec(line);
       if(match){
         params.memo = match[2];
@@ -130,17 +167,17 @@ export function analyze(log: string){
         params.id = match[1];
         continue;
       }
-      const regex5 = /^Buffer size is:\s+(.+)$/;
+      const regex5 = /^Buffer size is:\s+([\d.]+)(.+)$/;
       match = regex5.exec(line);
       if(match){
-        params.buffer_size = match[1];
+        params.buffer_size = [+match[1], match[2]];
         continue;
       }
       
       const regex6 = /^Using (\d+) buckets$/;
       match = regex6.exec(line);
       if(match){
-        params.buckets = match[1];
+        params.buckets = +match[1];
         continue;
       }
   
@@ -177,17 +214,19 @@ export function analyze(log: string){
       const regexForPhase1Start = /^Starting phase 1\/4: Forward Propagation into tmp files\.\.\. (.+)$/;
       let match = regexForPhase1Start.exec(line);
       if(match){
-        phase1.start_date = match[1];
+        phase1.start_date = new Date(match[1]);
         continue;
       }
   
       const regexF1Complete = /^F1 complete, time: (\d+\.?\d*) seconds. CPU \((.+)%\) (.+)$/;
       match = regexF1Complete.exec(line);
       if(match){
-        phase1.f1_complete = {
-          time: match[1],
-          cpu: match[2],
-          date: match[3],
+        phase1.table1 = {
+          f1_complete: {
+            time: +match[1],
+            cpu: +match[2],
+            date: new Date(match[3]),
+          }
         };
         continue;
       }
@@ -201,17 +240,17 @@ export function analyze(log: string){
         continue;
       }
   
-      const regexForBuckets = /^\tBucket (.+) (.+)\. Ram: (.+), u_sort min: (.+), qs min: (.+)\.( force_qs: (.*))?$/;
+      const regexForBuckets = /^\tBucket (\d+) (.+)\. Ram: ([\d.]+)(.+), u_sort min: ([\d.]+)(.+), qs min: ([\d.]+)(.+)\.( force_qs: (.*))?$/;
       match = regexForBuckets.exec(line);
       if(match){
         (phase1[subState as TSubState] as TPhase1BucketProgress).bucketInfo = (phase1[subState as TSubState])?.bucketInfo || [];
         const bucketInfo: TBucketInfo = {
-          bucket: match[1],
+          bucket: +match[1],
           sort: match[2],
-          ram: match[3],
-          u_sort_min: match[4],
-          qs_min: match[5],
-          force_qs: match.length > 7 ? match[7] : undefined,
+          ram: [+match[3], match[4]],
+          u_sort_min: [+match[5], match[6]],
+          qs_min: [+match[7], match[8]],
+          force_qs: match.length > 10 ? match[10] : undefined,
         };
         ((phase1[subState as TSubState] as TPhase1BucketProgress).bucketInfo as unknown[]).push(bucketInfo);
         continue;
@@ -220,28 +259,28 @@ export function analyze(log: string){
       const regexForTotalMatches = /^\tTotal matches: (\d+)$/;
       match = regexForTotalMatches.exec(line);
       if(match){
-        (phase1[subState as TSubState] as TPhase1BucketProgress).total_matches = match[1];
+        (phase1[subState as TSubState] as TPhase1BucketProgress).total_matches = +match[1];
         continue;
       }
       
-      const regexForForwardPropagation = /^Forward propagation table time: (.+) seconds. CPU \((.+)\) (.+)$/;
+      const regexForForwardPropagation = /^Forward propagation table time: (.+) seconds. CPU \((.+)%\) (.+)$/;
       match = regexForForwardPropagation.exec(line);
       if(match){
         (phase1[subState as TSubState] as TPhase1BucketProgress).complete = {
-          time: match[1],
-          cpu: match[2],
-          date: match[3],
+          time: +match[1],
+          cpu: +match[2],
+          date: new Date(match[3]),
         };
         continue;
       }
       
-      const regexForPhase1Complete = /^Time for phase 1 = (.+) seconds. CPU \((.+)\) (.+)$/;
+      const regexForPhase1Complete = /^Time for phase 1 = (.+) seconds. CPU \((.+)%\) (.+)$/;
       match = regexForPhase1Complete.exec(line);
       if(match){
         phase1.complete = {
-          time: match[1],
-          cpu: match[2],
-          date: match[3],
+          time: +match[1],
+          cpu: +match[2],
+          date: new Date(match[3]),
         };
         currentPhase = "phase2";
         subState = "";
@@ -253,7 +292,7 @@ export function analyze(log: string){
       const regexForPhase2Start = /^Starting phase 2\/4.+\.\.\. (.+)$/;
       let match = regexForPhase2Start.exec(line);
       if(match){
-        phase2.start_date = match[1];
+        phase2.start_date = new Date(match[1]);
         continue;
       }
   
@@ -267,13 +306,13 @@ export function analyze(log: string){
         continue;
       }
       
-      const regexScannedTime = /^scanned time\s+=\s+(.+)\s+seconds. CPU\s+\((.+)\)\s+(.+)$/;
+      const regexScannedTime = /^scanned time\s+=\s+(.+)\s+seconds. CPU\s+\((.+)%\)\s+(.+)$/;
       match = regexScannedTime.exec(line);
       if(match){
         phase2[subState as TSubState] = {
-          time: match[1],
-          cpu: match[2],
-          date: match[3],
+          time: +match[1],
+          cpu: +match[2],
+          date: new Date(match[3]),
         };
         continue;
       }
@@ -281,17 +320,17 @@ export function analyze(log: string){
       const regexTable1NewSize = /^table 1 new size: (\d+)$/;
       match = regexTable1NewSize.exec(line);
       if(match){
-        phase2.table1_new_size = match[1];
+        phase2.table1_new_size = +match[1];
         continue;
       }
   
-      const regexPhase2Time = /^Time for phase 2 =\s+(.+)\s+seconds. CPU\s+\((.+)\)\s+(.+)$/;
+      const regexPhase2Time = /^Time for phase 2 =\s+(.+)\s+seconds. CPU\s+\((.+)%\)\s+(.+)$/;
       match = regexPhase2Time.exec(line);
       if(match){
         phase2.complete = {
-          time: match[1],
-          cpu: match[2],
-          date: match[3],
+          time: +match[1],
+          cpu: +match[2],
+          date: new Date(match[3]),
         };
         continue;
       }
@@ -299,7 +338,7 @@ export function analyze(log: string){
       const regexWrote = /^Wrote: (.+)$/;
       match = regexWrote.exec(line);
       if(match){
-        phase2.wrote = match[1];
+        phase2.wrote = +match[1];
         currentPhase = "phase3";
         subState = "";
         l++; // Skip a blank line between phase 2 and 3.
@@ -310,7 +349,7 @@ export function analyze(log: string){
       let match = regexForPhase3Start.exec(line);
       if(match){
         phase3.tmp_path = match[1];
-        phase3.start_date = match[2];
+        phase3.start_date = new Date(match[2]);
         continue;
       }
       
@@ -323,41 +362,41 @@ export function analyze(log: string){
         phase3[subState as TSubState] = phase3[subState as TSubState] || {};
         continue;
       }
-      
-      const regexForBuckets = /^\tBucket (.+) (.+)\. Ram: (.+), u_sort min: (.+), qs min: (.+)\.( force_qs: (.*))?$/;
+  
+      const regexForBuckets = /^\tBucket (\d+) (.+)\. Ram: ([\d.]+)(.+), u_sort min: ([\d.]+)(.+), qs min: ([\d.]+)(.+)\.( force_qs: (.*))?$/;
       match = regexForBuckets.exec(line);
       if(match){
         (phase3[subState as TSubState] as TPhase3BucketProgress).bucketInfo = (phase3[subState as TSubState] as TPhase3BucketProgress).bucketInfo || [];
-        const bucketInfo = {
-          bucket: match[1],
+        const bucketInfo: TBucketInfo = {
+          bucket: +match[1],
           sort: match[2],
-          ram: match[3],
-          u_sort_min: match[4],
-          qs_min: match[5],
-          force_qs: match.length > 7 ? match[7] : undefined,
+          ram: [+match[3], match[4]],
+          u_sort_min: [+match[5], match[6]],
+          qs_min: [+match[7], match[8]],
+          force_qs: match.length > 10 ? match[10] : undefined,
         };
-        ((phase3[subState as TSubState] as TPhase3BucketProgress).bucketInfo as unknown[]).push(bucketInfo);
+        ((phase3[subState as TSubState] as TPhase3BucketProgress).bucketInfo).push(bucketInfo);
         continue;
       }
       
-      const regexForFirstComputationSummary = /^\tFirst computation pass time: (.+) seconds. CPU \((.+)\) (.+)$/;
+      const regexForFirstComputationSummary = /^\tFirst computation pass time: (.+) seconds. CPU \((.+)%\) (.+)$/;
       match = regexForFirstComputationSummary.exec(line);
       if(match){
         (phase3[subState as TSubState] as TPhase3BucketProgress).firstComputationSummary = {
-          time: match[1],
-          cpu: match[2],
-          date: match[3],
+          time: +match[1],
+          cpu: +match[2],
+          date: new Date(match[3]),
         };
         continue;
       }
   
-      const regexForSecondComputationSummary = /^\tSecond computation pass time: (.+) seconds. CPU \((.+)\) (.+)$/;
+      const regexForSecondComputationSummary = /^\tSecond computation pass time: (.+) seconds. CPU \((.+)%\) (.+)$/;
       match = regexForSecondComputationSummary.exec(line);
       if(match){
         (phase3[subState as TSubState] as TPhase3BucketProgress).secondComputationSummary = {
-          time: match[1],
-          cpu: match[2],
-          date: match[3],
+          time: +match[1],
+          cpu: +match[2],
+          date: new Date(match[3]),
         };
         continue;
       }
@@ -365,28 +404,28 @@ export function analyze(log: string){
       const regexForWrote = /^\tWrote (.+) entries$/;
       match = regexForSecondComputationSummary.exec(line);
       if(match){
-        (phase3[subState as TSubState] as TPhase3BucketProgress).wrote = match[1];
+        (phase3[subState as TSubState] as TPhase3BucketProgress).wrote = +match[1];
         continue;
       }
   
-      const regexForTotalCompressTableTime = /^Total compress table time: (.+) seconds. CPU \((.+)\) (.+)$/;
+      const regexForTotalCompressTableTime = /^Total compress table time: (.+) seconds. CPU \((.+)%\) (.+)$/;
       match = regexForTotalCompressTableTime.exec(line);
       if(match){
         (phase3[subState as TSubState] as TPhase3BucketProgress).totalCompressSummary = {
-          time: match[1],
-          cpu: match[2],
-          date: match[3],
+          time: +match[1],
+          cpu: +match[2],
+          date: new Date(match[3]),
         };
         continue;
       }
   
-      const regexForPhase3Summary = /^Time for phase 3 = (.+) seconds. CPU \((.+)\) (.+)$/;
+      const regexForPhase3Summary = /^Time for phase 3 = (.+) seconds. CPU \((.+)%\) (.+)$/;
       match = regexForPhase3Summary.exec(line);
       if(match){
         phase3.complete = {
-          time: match[1],
-          cpu: match[2],
-          date: match[3],
+          time: +match[1],
+          cpu: +match[2],
+          date: new Date(match[3]),
         };
         currentPhase = "phase4";
         subState = "";
@@ -399,7 +438,7 @@ export function analyze(log: string){
       let match = regexForPhase4Start.exec(line);
       if(match){
         phase4.tmp_path = match[1];
-        phase4.start_date = match[2];
+        phase4.start_date = new Date(match[2]);
         continue;
       }
   
@@ -409,19 +448,21 @@ export function analyze(log: string){
         continue;
       }
   
-      const regexForBuckets = /^\tBucket (.+) (.+)\. Ram: (.+), u_sort min: (.+), qs min: (.+)\.( force_qs: (.*))?$/;
+      type TSubState = ""
+  
+      const regexForBuckets = /^\tBucket (\d+) (.+)\. Ram: ([\d.]+)(.+), u_sort min: ([\d.]+)(.+), qs min: ([\d.]+)(.+)\.( force_qs: (.*))?$/;
       match = regexForBuckets.exec(line);
       if(match){
-        (phase4[subState] as Record<string, unknown>).bucketInfo = (phase4[subState] as Record<string, unknown>).bucketInfo || [];
-        const bucketInfo = {
-          bucket: match[1],
+        phase4.bucketInfo = phase4.bucketInfo || [];
+        const bucketInfo: TBucketInfo = {
+          bucket: +match[1],
           sort: match[2],
-          ram: match[3],
-          u_sort_min: match[4],
-          qs_min: match[5],
-          force_qs: match.length > 7 ? match[7] : undefined,
+          ram: [+match[3], match[4]],
+          u_sort_min: [+match[5], match[6]],
+          qs_min: [+match[7], match[8]],
+          force_qs: match.length > 10 ? match[10] : undefined,
         };
-        ((phase4[subState] as Record<string, unknown>).bucketInfo as unknown[]).push(bucketInfo);
+        phase4.bucketInfo.push(bucketInfo);
         continue;
       }
   
@@ -437,7 +478,8 @@ export function analyze(log: string){
         continue;
       }
       
-      const regexForXX = {
+      type XX = "P1"|"P2"|"P3"|"P4"|"P5"|"P6"|"P7"|"C1"|"C2"|"C3"
+      const regexForXX: Record<XX, RegExp> = {
         P1: /^\tP1: (.+)$/,
         P2: /^\tP2: (.+)$/,
         P3: /^\tP3: (.+)$/,
@@ -448,24 +490,24 @@ export function analyze(log: string){
         C1: /^\tC1: (.+)$/,
         C2: /^\tC2: (.+)$/,
         C3: /^\tC3: (.+)$/,
-      } as Record<string, RegExp>;
+      };
       for(const XX in regexForXX){
         if(regexForXX.hasOwnProperty(XX)){
-          match = regexForXX[XX].exec(line);
+          match = regexForXX[XX as XX].exec(line);
           if(match){
-            phase4[XX] = match[1];
+            phase4[XX as XX] = match[1];
             continue;
           }
         }
       }
   
-      const regexForPhase3Summary = /^Time for phase 4 = (.+) seconds. CPU \((.+)\) (.+)$/;
+      const regexForPhase3Summary = /^Time for phase 4 = (.+) seconds. CPU \((.+)%\) (.+)$/;
       match = regexForPhase3Summary.exec(line);
       if(match){
-        phase4.phase4Summary = {
-          time: match[1],
-          cpu: match[2],
-          date: match[3],
+        phase4.complete = {
+          time: +match[1],
+          cpu: +match[2],
+          date: new Date(match[3]),
         };
         currentPhase = "create_plots_result";
         subState = "";
@@ -473,27 +515,27 @@ export function analyze(log: string){
       }
     }
     else if(currentPhase === "create_plots_result"){
-      const regex1 = /^Approximate working space used \(without final file\): (.+)$/;
+      const regex1 = /^Approximate working space used \(without final file\): ([\d.]+)(.+)$/;
       let match = regex1.exec(line);
       if(match){
-        result.approximate_working_space_used = match[1];
+        phaseSummary.approximate_working_space_used = [+match[1], match[2]];
         continue;
       }
       
-      const regex2 = /^Final File size: (.+)$/;
+      const regex2 = /^Final File size: ([\d.]+)(.+)$/;
       match = regex2.exec(line);
       if(match){
-        result.final_file_size = match[1];
+        phaseSummary.final_file_size = [+match[1], match[2]];
         continue;
       }
       
-      const regex3 = /^Total time = (.+) seconds. CPU \((.+)\) (.+)$/;
+      const regex3 = /^Total time = (.+) seconds. CPU \((.+)%\) (.+)$/;
       match = regex3.exec(line);
       if(match){
-        result.summary = {
-          time: match[1],
-          cpu: match[2],
-          date: match[3],
+        phaseSummary.complete = {
+          time: +match[1],
+          cpu: +match[2],
+          date: new Date(match[3]),
         };
         continue;
       }
@@ -501,43 +543,33 @@ export function analyze(log: string){
       const regex4 = /^Copied final file from "(.+)" to "(.+)"$/;
       match = regex4.exec(line);
       if(match){
-        result.copy = result.copy || {};
-        (result.copy as Record<string, unknown>).from = match[1];
-        (result.copy as Record<string, unknown>).to = match[2];
+        copyPhase.from = match[1];
+        copyPhase.to = match[2];
         continue;
       }
       
-      const regex5 = /^Copy time = (.+) seconds. CPU \((.+)\) (.+)$/;
+      const regex5 = /^Copy time = (.+) seconds. CPU \((.+)%\) (.+)$/;
       match = regex5.exec(line);
       if(match){
-        result.copy = result.copy || {};
-        (result.copy as Record<string, unknown>).time = match[1];
-        (result.copy as Record<string, unknown>).cpu = match[2];
-        (result.copy as Record<string, unknown>).date = match[3];
+        copyPhase.complete = {
+          time: +match[1],
+          cpu: +match[2],
+          date: new Date(match[3]),
+        };
         continue;
       }
   
-      const regex6 = /^Copy time = (.+) seconds. CPU \((.+)\) (.+)$/;
+      const regex6 = /^Removed temp2 file "(.+)"\?\s+(.+)$/;
       match = regex6.exec(line);
       if(match){
-        result.copy = result.copy || {};
-        (result.copy as Record<string, unknown>).time = match[1];
-        (result.copy as Record<string, unknown>).cpu = match[2];
-        (result.copy as Record<string, unknown>).date = match[3];
+        copyPhase.removed_temp2_file = match[1];
         continue;
       }
   
-      const regex7 = /^Removed temp2 file "(.+)"\?\s+(.+)$/;
+      const regex7 = /^Renamed final file from "(.+)" to "(.+)"$/;
       match = regex7.exec(line);
       if(match){
-        result.removed_temp2_file = match[1];
-        continue;
-      }
-  
-      const regex8 = /^Renamed final file from "(.+)" to "(.+)"$/;
-      match = regex8.exec(line);
-      if(match){
-        result.renamed_final_file = {
+        copyPhase.renamed_final_file = {
           from: match[1],
           to: match[2],
         };
@@ -552,7 +584,7 @@ export function analyze(log: string){
         let match = regex1.exec(line);
         if(match){
           subState = "2";
-          result.finished_time = match[1];
+          phaseSummary.finished_time = new Date(match[1]);
           continue;
         }
         
@@ -560,14 +592,14 @@ export function analyze(log: string){
         match = regex2.exec(line);
         if(match){
           subState = "3";
-          result.finished_time = match[1];
+          phaseSummary.finished_time = new Date(match[1]);
           continue;
         }
   
         const regex3 = /^([^\s]+)\s+chia\.plotting\.create_plots\s+:.+INFO\s+.+Created a total of (\d+) new plots.+$/;
         match = regex3.exec(line);
         if(match){
-          result.finished_time = match[1];
+          phaseSummary.finished_time = new Date(match[1]);
           continue;
         }
       }
@@ -580,6 +612,7 @@ export function analyze(log: string){
     phase2,
     phase3,
     phase4,
-    result,
+    phaseSummary,
+    copyPhase,
   };
 }
