@@ -1,0 +1,28 @@
+{
+  "name": "chkplot",
+  "version": "0.0.0",
+  "author": "ChiaMineJP <admin@chiamine.jp>",
+  "description": "chia plot log analyzer",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Chia-Mine/chkplot.git"
+  },
+  "bugs": "https://github.com/Chia-Mine/chkplot/issues",
+  "main": "./index.js",
+  "bin": {
+    "chkplot": "./bin/cli.js"
+  },
+  "keywords": [
+    "chia",
+    "plot",
+    "log",
+    "plot",
+    "typescript",
+    "crypto"
+  ],
+  "engines": {
+    "node": ">=12.13.0"
+  },
+  "dependencies": {}
+}
