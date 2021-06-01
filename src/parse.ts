@@ -1,3 +1,5 @@
+export type TSizeUnit = "B"|"KiB"|"MiB"|"GiB"|"TiB"|"PiB"|"EiB";
+export type TSize = [number, TSizeUnit];
 export type TPlotterParams = {
   start_time: Date;
   k: number;
@@ -7,7 +9,7 @@ export type TPlotterParams = {
   temp1_dir: string;
   temp2_dir: string;
   id: string;
-  buffer_size: [number, string];
+  buffer_size: TSize;
   buckets: number;
   final_dir: string;
   threads: number;
@@ -17,9 +19,9 @@ export type TPlotterParams = {
 export type TBucketInfo = {
   bucket: number;
   sort: string;
-  ram: [number, string];
-  u_sort_min: [number, string];
-  qs_min: [number, string];
+  ram: TSize;
+  u_sort_min: TSize;
+  qs_min: TSize;
   force_qs?: string;
 };
 export type TComplete = {
@@ -32,7 +34,19 @@ export type TPhase1BucketProgress = {
   total_matches: number;
   complete: TComplete;
 };
-export type TPhase1 = {
+export type TPhase1<IsComplete extends boolean = false> = IsComplete extends true ? {
+  start_date: Date;
+  table1: {
+    f1_complete: TComplete;
+  };
+  table2: TPhase1BucketProgress;
+  table3: TPhase1BucketProgress;
+  table4: TPhase1BucketProgress;
+  table5: TPhase1BucketProgress;
+  table6: TPhase1BucketProgress;
+  table7: TPhase1BucketProgress;
+  complete: TComplete;
+} : {
   start_date: Date;
   table1: {
     f1_complete: TComplete;
@@ -64,7 +78,17 @@ export type TPhase3BucketProgress = {
   totalCompressSummary: TComplete;
   wrote: number;
 };
-export type TPhase3 = {
+export type TPhase3<IsComplete extends boolean = false> = IsComplete extends true ? {
+  tmp_path: string;
+  start_date: Date;
+  table1and2: TPhase3BucketProgress;
+  table2and3: TPhase3BucketProgress;
+  table3and4: TPhase3BucketProgress;
+  table4and5: TPhase3BucketProgress;
+  table5and6: TPhase3BucketProgress;
+  table6and7: TPhase3BucketProgress;
+  complete: TComplete;
+} : {
   tmp_path: string;
   start_date: Date;
   table1and2: Partial<TPhase3BucketProgress>;
@@ -92,8 +116,8 @@ export type TPhase4 = {
   complete: TComplete;
 };
 export type TPhaseSummary = {
-  approximate_working_space_used: [number, string];
-  final_file_size: [number, string];
+  approximate_working_space_used: TSize;
+  final_file_size: TSize;
   complete: TComplete;
   finished_time: Date;
 };
@@ -108,7 +132,15 @@ export type TCopyPhase = {
   }
 };
 
-export type TParsed = {
+export type TParsed<IsComplete extends boolean = false> = IsComplete extends true ? {
+  params: TPlotterParams;
+  phase1: TPhase1<true>;
+  phase2: TPhase2;
+  phase3: TPhase3<true>;
+  phase4: TPhase4;
+  phaseSummary: TPhaseSummary;
+  copyPhase: TCopyPhase;
+} : {
   params: Partial<TPlotterParams>;
   phase1: Partial<TPhase1>;
   phase2: Partial<TPhase2>;
@@ -118,8 +150,8 @@ export type TParsed = {
   copyPhase: Partial<TCopyPhase>;
 };
 
-export function parse(log: string): TParsed {
-  const lines = log.split(/\r?\n/);
+export function parse(log: string|string[]): TParsed {
+  const lines = Array.isArray(log) ? log : log.trim().split(/\r\n|\r|\n/);
   const maxLine = lines.length;
   
   const params: Partial<TPlotterParams> = {};
@@ -170,7 +202,7 @@ export function parse(log: string): TParsed {
       const regex5 = /^Buffer size is:\s+([\d.]+)(.+)$/;
       match = regex5.exec(line);
       if(match){
-        params.buffer_size = [+match[1], match[2]];
+        params.buffer_size = [+match[1], match[2] as TSizeUnit];
         continue;
       }
       
@@ -247,9 +279,9 @@ export function parse(log: string): TParsed {
         const bucketInfo: TBucketInfo = {
           bucket: +match[1],
           sort: match[2],
-          ram: [+match[3], match[4]],
-          u_sort_min: [+match[5], match[6]],
-          qs_min: [+match[7], match[8]],
+          ram: [+match[3], match[4] as TSizeUnit],
+          u_sort_min: [+match[5], match[6] as TSizeUnit],
+          qs_min: [+match[7], match[8] as TSizeUnit],
           force_qs: match.length > 10 ? match[10] : undefined,
         };
         ((phase1[subState as TSubState] as TPhase1BucketProgress).bucketInfo as unknown[]).push(bucketInfo);
@@ -345,7 +377,7 @@ export function parse(log: string): TParsed {
       }
     }
     else if(currentPhase === "phase3"){
-      const regexForPhase3Start = /^Starting phase 3\/4.+from temp files into "(.+)"\s+\.\.\.\s+(.+)$/;
+      const regexForPhase3Start = /^Starting phase 3\/4.+from tmp files into "(.+)"\s+\.\.\.\s+(.+)$/;
       let match = regexForPhase3Start.exec(line);
       if(match){
         phase3.tmp_path = match[1];
@@ -370,9 +402,9 @@ export function parse(log: string): TParsed {
         const bucketInfo: TBucketInfo = {
           bucket: +match[1],
           sort: match[2],
-          ram: [+match[3], match[4]],
-          u_sort_min: [+match[5], match[6]],
-          qs_min: [+match[7], match[8]],
+          ram: [+match[3], match[4] as TSizeUnit],
+          u_sort_min: [+match[5], match[6] as TSizeUnit],
+          qs_min: [+match[7], match[8] as TSizeUnit],
           force_qs: match.length > 10 ? match[10] : undefined,
         };
         ((phase3[subState as TSubState] as TPhase3BucketProgress).bucketInfo).push(bucketInfo);
@@ -457,9 +489,9 @@ export function parse(log: string): TParsed {
         const bucketInfo: TBucketInfo = {
           bucket: +match[1],
           sort: match[2],
-          ram: [+match[3], match[4]],
-          u_sort_min: [+match[5], match[6]],
-          qs_min: [+match[7], match[8]],
+          ram: [+match[3], match[4] as TSizeUnit],
+          u_sort_min: [+match[5], match[6] as TSizeUnit],
+          qs_min: [+match[7], match[8] as TSizeUnit],
           force_qs: match.length > 10 ? match[10] : undefined,
         };
         phase4.bucketInfo.push(bucketInfo);
@@ -518,14 +550,14 @@ export function parse(log: string): TParsed {
       const regex1 = /^Approximate working space used \(without final file\): ([\d.]+)(.+)$/;
       let match = regex1.exec(line);
       if(match){
-        phaseSummary.approximate_working_space_used = [+match[1], match[2]];
+        phaseSummary.approximate_working_space_used = [+match[1], match[2] as TSizeUnit];
         continue;
       }
       
       const regex2 = /^Final File size: ([\d.]+)(.+)$/;
       match = regex2.exec(line);
       if(match){
-        phaseSummary.final_file_size = [+match[1], match[2]];
+        phaseSummary.final_file_size = [+match[1], match[2] as TSizeUnit];
         continue;
       }
       
