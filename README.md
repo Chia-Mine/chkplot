@@ -1,7 +1,7 @@
 # chkplot
 [![npm version](https://badge.fury.io/js/chkplot.svg)](https://badge.fury.io/js/chkplot) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Chia log parser/analyzer
+Chia plot log parser/analyzer
 
 ## Install
 ```
@@ -10,8 +10,7 @@ npm install chkplot
 yarn add chkplot
 ```
 
-## Usage
-### Command line
+## Command line
 ```
 npx chkplot list [-n <N>]
     Show available plot log files.
@@ -36,8 +35,11 @@ npx chkplot summary [-u <uuid>|-n <N>|-a]
   chkplot wip -n 10
   ```
 
-### As a log parser
-`chkplot` exposes several library function to parse/analyze plotter log.
+### Demo
+![](./example/chkplot-demo1.mov)
+
+## As a log parser
+`chkplot` exposes several function to parse/analyze plotter log.
 
 ```typescript
 const {parsePlotterLog} = require("chkplot");
