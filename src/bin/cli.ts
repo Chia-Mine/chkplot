@@ -2,7 +2,8 @@
 import {
   listPlotterLogFiles,
   getPlotterLogSummary,
-  printProgress, printSummary,
+  printProgress,
+  printSummary,
 } from "../";
 
 main().catch(e => {
@@ -14,13 +15,12 @@ async function main(){
   const argv = process.argv.slice(2);
   const usage = `Usage:
 ${exeCommand} list [-n <N>]
-    Show available plot log files.
+    Show available plot progress/result from plotter log files.
     -n: If you specify -n 3, then top 3 of most recent plotting progress/result will be shown.
     
 ${exeCommand} wip [-n <N>]
-    Show plotting progress from plotter log files.
-    You can specify max plotter progress to show with -n option.
-    If you specify -n 10, then top 10 of most recent plotting progress will be shown.
+    Show unfinished plotting progress from plotter log files.
+    -n: If you specify -n 10, then top 10 of most recent plotting progress will be shown.
 
 ${exeCommand} summary [-u <uuid>|-n <N>|-a]
     Show plot summary.
