@@ -150,7 +150,7 @@ export type TParsed<IsComplete extends boolean = false> = IsComplete extends tru
   copyPhase: Partial<TCopyPhase>;
 };
 
-export function parse(log: string|string[]): TParsed {
+export function parsePlotterLog(log: string|string[]): TParsed {
   const lines = Array.isArray(log) ? log : log.trim().split(/\r\n|\r|\n/);
   const maxLine = lines.length;
   

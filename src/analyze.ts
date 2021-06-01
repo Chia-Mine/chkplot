@@ -1,4 +1,4 @@
-import {parse, TParsed, TSize, TSizeUnit} from "./parse";
+import {parsePlotterLog, TParsed, TSize, TSizeUnit} from "./parse";
 
 export function resolveSizeUnit(size: [number, string]){
   let p = 0;
@@ -127,8 +127,8 @@ export function compileTime(parsedTime: ReturnType<typeof parseTime>){
   return parsedTime.hour*3600 + parsedTime.minute*60 + parsedTime.second;
 }
 
-export function summarize(log: string){
-  const parsedLog = parse(log);
+export function summarize(log: string, uuid?: string){
+  const parsedLog = parsePlotterLog(log);
   const startDate = parsedLog.params.start_time || parsedLog.phase1.start_date;
   const endDate = parsedLog.phaseSummary.finished_time;
   
@@ -141,10 +141,11 @@ export function summarize(log: string){
   const timeForPlotPlusCopy = parsedLog.phaseSummary.complete ? (parsedLog.phaseSummary.complete.time + (parsedLog.copyPhase.complete?.time || 0)) : null;
   const overallCompleteTime = timeForPlotPlusCopy ? parseTime(timeForPlotPlusCopy) : null;
   
-  const phase = copyTime ? "complete" : plotCompleteTime ? "complete" : phase4CompleteTime ? "phase4"
-  : phase3CompleteTime ? "phase3" : phase2CompleteTime ? "phase2" : phase1CompleteTime ? "phase1" : "";
+  const phase = copyTime ? "complete" : plotCompleteTime ? "complete" : phase4CompleteTime ? "final copy"
+  : phase3CompleteTime ? "phase4" : phase2CompleteTime ? "phase3" : phase1CompleteTime ? "phase2" : "phase1";
   
   return {
+    uuid,
     id: parsedLog.params.id,
     start_date: startDate ? startDate.toLocaleString() : null,
     k: parsedLog.params.k,
@@ -197,14 +198,15 @@ export function printSummary(summary: ReturnType<typeof summarize>){
 
 export function printProgress(summary: ReturnType<typeof summarize>){
   const printing =
-    `progress:${summary.progress}%`
-    + ` phase:${summary.phase}`
-    + ` start:${summary.start_date}`
+    `[${(summary.uuid||"").padEnd(36, " ")}]`
+    + ` ${summary.progress}%`.padEnd(5, " ")
+    + ` ${summary.phase}`
+    + ` ${summary.start_date}`
     + ` k:${summary.k}`
     + ` r:${summary.r}`
     + ` b:${summary.b?.join("")}`
     + ` r:${summary.r}`
     + ` t:${summary.t}`
-    + ` d:${summary.d}`
+    + ` d:${summary.d || "?"}`
   console.log(printing);
 }
