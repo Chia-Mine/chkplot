@@ -1,11 +1,11 @@
-# plot-log-analyzer
-[![npm version](https://badge.fury.io/js/plot-log-analyzer.svg)](https://badge.fury.io/js/plot-log-analyzer) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+# chkplot
+[![npm version](https://badge.fury.io/js/chkplot.svg)](https://badge.fury.io/js/chkplot) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Install
 ```
-npm install plot-log-analyzer
+npm install chkplot
 # or
-yarn add plot-log-analyzer
+yarn add chkplot
 ```
 
 ## Donation
