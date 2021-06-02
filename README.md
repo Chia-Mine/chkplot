@@ -38,8 +38,10 @@ npx chkplot summary [-u <uuid>|-n <N>|-a]
 ### Demo
 ![](https://github.com/Chia-Mine/chkplot/blob/v0.0.1/example/chkplot-demo1.gif)
 
-## As a log parser
+## Library
 `chkplot` exposes several function to parse/analyze plotter log.
+
+### parsePlotterLog
 
 ```typescript
 const {parsePlotterLog} = require("chkplot");
@@ -161,6 +163,36 @@ The content of `parsedLog` looks like:
       "to": "R:\\\\plot-k32-2021-05-19-10-29-xxxxxxxxxxxxxx.plot"
     }
   }
+}
+```
+
+### summarize
+
+```typescript
+const {summarize} = require("chkplot");
+const log = fs.readFileSync(<path_to_plotter_log>, {encoding: "utf-8"});
+const summarizedLog = summarize(log);
+```
+The content of `summarizedLog` looks like:
+```json
+{
+  "id": "xxxxxxxxxxxxxxxxxxxxxx",
+  "start_date": "2021-5-25 2:17:19",
+  "k": 32,
+  "r": 3,
+  "b": [ 4100, "MiB" ],
+  "t": "D:\\chia_plot",
+  "d": undefined,
+  "phase1CompleteTime": { "hour": 3, "minute": 4, "second": 54.753 },
+  "phase2CompleteTime": { "hour": 1, "minute": 16, "second": 9.744 },
+  "phase3CompleteTime": { "hour": 2, "minute": 33, "second": 14.112 },
+  "phase4CompleteTime": { "hour": 0, "minute": 11, "second": 51.734 },
+  "plotCompleteTime": { "hour": 7, "minute": 6, "second": 10.344 },
+  "copyTime": { "hour": 0, "minute": 12, "second": 39.958 },
+  "overallCompleteTime": { "hour": 7, "minute": 18, "second": 50.302 },
+  "progress": 100,
+  "phase": "complete",
+  "finish_date": "2021-5-25 9:36:14"
 }
 ```
 
