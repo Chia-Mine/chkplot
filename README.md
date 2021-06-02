@@ -36,7 +36,7 @@ npx chkplot summary [-u <uuid>|-n <N>|-a]
   ```
 
 ### Demo
-![](./example/chkplot-demo1.mp4)
+![](https://github.com/Chia-Mine/chkplot/blob/v0.0.1/example/chkplot-demo1.gif)
 
 ## As a log parser
 `chkplot` exposes several function to parse/analyze plotter log.
