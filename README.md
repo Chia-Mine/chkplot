@@ -110,7 +110,7 @@ $ npx chkplot watch
 
 
 ### Demo
-![](https://github.com/Chia-Mine/chkplot/blob/v0.0.1/example/chkplot-demo1.gif)
+![](https://github.com/Chia-Mine/chkplot/blob/v0.0.1/example/chkplot-demo.gif)
 
 ## Library
 `chkplot` exposes several function to parse/analyze plotter log.
