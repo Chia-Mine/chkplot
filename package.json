@@ -1,6 +1,6 @@
 {
   "name": "chkplot",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "author": "ChiaMineJP <admin@chiamine.jp>",
   "description": "chia plot log analyzer",
   "license": "MIT",
@@ -18,14 +18,21 @@
     "build:prod": "node ./pre_publish.js --prod && tsc --project tsconfig.json --allowJS false --declaration --declarationDir ./dist --outDir ./dist"
   },
   "keywords": [
-    "chia", "plot", "log", "plot", "typescript", "crypto"
+    "chia",
+    "plot",
+    "log",
+    "plot",
+    "typescript",
+    "crypto"
   ],
   "engines": {
     "node": ">=12.13.0"
   },
   "dependencies": {
+    "blessed": "^0.1.81"
   },
   "devDependencies": {
+    "@types/blessed": "^0.1.17",
     "@types/node": "^15.0.2",
     "@typescript-eslint/eslint-plugin": "^4.1.0",
     "@typescript-eslint/parser": "^4.1.0",

@@ -13,3 +13,4 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./parse"), exports);
 __exportStar(require("./analyze"), exports);
 __exportStar(require("./file"), exports);
+__exportStar(require("./async"), exports);
