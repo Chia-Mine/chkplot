@@ -17,6 +17,9 @@ ${exeCommand} summary [-u <uuid>|-n <N>|-a]
     -u: Specify plot uuid for summary. uuid can be listed by '${exeCommand} list'
     -n: If you specify -n 3, then top 3 of most recent plotting log summary will be shown.
     -a: Show all available plot log summary
+
+${exeCommand} watch
+    Realtime monitor for plot progress.
 `;
 }
 
@@ -216,7 +219,7 @@ async function summary(params: Record<string, string|boolean>){
         continue;
       }
       uuid = match[1];
-      if(u === uuid){
+      if((new RegExp(`^${u}`)).test(uuid)){
         const summaries = getPlotterLogSummary([f], {n});
         for await (const s of summaries){
           printSummary(s);
