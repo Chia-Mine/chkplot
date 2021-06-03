@@ -256,13 +256,6 @@ async function watch(params: Record<string, string|boolean>){
   // Render the screen.
   screen.render();
   
-  let files = await listPlotterLogFiles();
-  files.sort((a, b) => {
-    return b.stats.mtimeMs - a.stats.mtimeMs;
-  });
-  
-  // Remove files whose last update time is larger than 24hours.
-  files = files.filter(f => (Date.now() - f.stats.mtimeMs) < 86400000);
   type Element = {
     resetTop: (top: number) => void;
     progress: Widgets.ProgressBarElement;
@@ -280,6 +273,14 @@ async function watch(params: Record<string, string|boolean>){
     if(s.done){
       break;
     }
+  
+    let files = await listPlotterLogFiles();
+    files.sort((a, b) => {
+      return b.stats.mtimeMs - a.stats.mtimeMs;
+    });
+  
+    // Remove files whose last update time is larger than 24hours.
+    files = files.filter(f => (Date.now() - f.stats.mtimeMs) < 86400000);
     
     // render header
     const headerText = [
