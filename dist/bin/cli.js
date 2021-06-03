@@ -343,7 +343,7 @@ function watch(params) {
                             style: {
                                 bar: {
                                     fg: "#000",
-                                    bg: "red",
+                                    bg: "green",
                                 }
                             },
                         });

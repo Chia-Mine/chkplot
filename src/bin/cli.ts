@@ -335,7 +335,7 @@ async function watch(params: Record<string, string|boolean>){
           style: {
             bar: {
               fg: "#000",
-              bg: "red",
+              bg: "green",
             }
           },
         });
