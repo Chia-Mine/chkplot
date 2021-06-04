@@ -246,8 +246,9 @@ async function watch(params: Record<string, string|boolean>){
     formatDate,
   } = await import("../");
   
-  
-  const screen = blessed.screen();
+  const screen = blessed.screen({
+    smartCSR: true,
+  });
   
   // Quit on Escape, q, or Control-C.
   screen.key(['escape', 'q', 'C-c'], function(ch, key) {
@@ -309,7 +310,7 @@ async function watch(params: Record<string, string|boolean>){
       }
   
       const outputs: string[] = [];
-      const uuid = (summary.uuid||"").split("-")[0];
+      const uuid = summary.uuid.split("-")[0];
       outputs.push(uuid.padEnd(8, " "));
       outputs.push(`${summary.start_date ? formatDate(summary.start_date) : ""}`);
       outputs.push(`${summary.k}`);
@@ -319,17 +320,28 @@ async function watch(params: Record<string, string|boolean>){
       const msg = outputs.join(" ");
       
       if(!uuidElementMap[summary.uuid]){
-        const text = blessed.text({
-          parent: screen,
+        const positionText = {
           top: nWip+1,
           left: 0,
+          bottom: null,
+          right: null,
+        };
+        const text = blessed.text({
+          parent: screen,
+          position: positionText as any,
           height: 1,
           content: msg,
         });
-        const progress = blessed.progressbar({
-          parent: screen,
+        
+        const positionProgress = {
           top: nWip+1,
           left: 50,
+          bottom: null,
+          right: null,
+        };
+        const progress = blessed.progressbar({
+          parent: screen,
+          position: positionProgress as any,
           width: 20,
           height: 1,
           value: summary.progress,
@@ -344,7 +356,7 @@ async function watch(params: Record<string, string|boolean>){
         progress.setProgress(summary.progress);
         
         uuidElementMap[summary.uuid] = {
-          resetTop: (top) => { text.top = top; progress.top = top; },
+          resetTop: (top: number) => {positionText.top = top; positionProgress.top = top; },
           text,
           progress,
         };
@@ -384,13 +396,14 @@ async function watch(params: Record<string, string|boolean>){
         const el = uuidElementMap[uuid];
         el.text.destroy();
         el.progress.destroy();
-        nWip--;
         delete uuidElementMap[uuid];
       });
       processedUuids.forEach((uuid, i) => {
         const el = uuidElementMap[uuid];
-        el.resetTop(i);
+        el.resetTop(i+1);
       });
+      nWip = processedUuids.length;
+      screen.render();
     }
   }
 }
