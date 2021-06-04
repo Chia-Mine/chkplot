@@ -275,21 +275,21 @@ function watch(params) {
         });
         // Render the screen.
         screen.render();
-        let files = yield listPlotterLogFiles();
-        files.sort((a, b) => {
-            return b.stats.mtimeMs - a.stats.mtimeMs;
-        });
-        // Remove files whose last update time is larger than 24hours.
-        files = files.filter(f => (Date.now() - f.stats.mtimeMs) < 86400000);
         const uuidElementMap = {};
         const loop = createTimerLoop();
-        const loopOption = { sleepMs: 3000, stop: false };
+        const loopOption = { sleepMs: 5000, stop: false };
         let s;
         let nWip = 0;
         while (s = yield loop.next(loopOption)) {
             if (s.done) {
                 break;
             }
+            let files = yield listPlotterLogFiles();
+            files.sort((a, b) => {
+                return b.stats.mtimeMs - a.stats.mtimeMs;
+            });
+            // Remove files whose last update time is larger than 24hours.
+            files = files.filter(f => (Date.now() - f.stats.mtimeMs) < 86400000);
             // render header
             const headerText = [
                 "uuid".padEnd(8, " "),
