@@ -110,7 +110,7 @@ Note: Terminal output sample is includes in demo movie below.
 
 
 ### Demo
-![](https://github.com/Chia-Mine/chkplot/blob/v0.0.1/example/chkplot-demo.gif)
+![](https://github.com/Chia-Mine/chkplot/blob/main/example/chkplot-demo.gif)
 
 ## Library
 `chkplot` exposes several function to parse/analyze plotter log.
