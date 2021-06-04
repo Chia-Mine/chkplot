@@ -2,6 +2,9 @@
 ### Fixed
 - Fixed an issue where new plot task was ignored in `chkplot watch` command
 
+### Changed
+- Changed monitor interval to 5s from 3s in `chkplot watch` command
+
 ## [0.0.1] - 2021-06-04
 ### Changed
 - Updated CLI usage text
