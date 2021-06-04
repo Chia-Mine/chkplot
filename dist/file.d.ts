@@ -10,7 +10,7 @@ export declare type TGetPlotterLogSummaryOption = {
 export declare function getPlotterLogSummary(fileStats: ReturnType<typeof listPlotterLogFiles> extends Promise<infer T> ? T : never, option?: Partial<TGetPlotterLogSummaryOption>): AsyncGenerator<{
     uuid: string | undefined;
     id: string | undefined;
-    start_date: string | null;
+    start_date: Date | null;
     k: number | undefined;
     r: number | undefined;
     b: import("./parse").TSize | undefined;

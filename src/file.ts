@@ -41,7 +41,7 @@ export async function* getPlotterLogSummary(
 ){
   let files = [...fileStats];
   files.sort((a, b) => {
-    return b.stats.mtimeMs - a.stats.mtimeMs;
+    return b.stats.birthtimeMs - a.stats.birthtimeMs;
   });
   
   const n = typeof option?.n === "number" ? option.n : -1;
