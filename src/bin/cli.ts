@@ -267,7 +267,27 @@ async function watch(params: Record<string, string|boolean>){
   const loopOption = {sleepMs: 5000, stop: false};
   let s: IteratorResult<unknown, any>;
   
+  let noPlotTasksYet: Widgets.TextElement|null = null;
   let nWip = 0;
+  
+  // render header
+  const headerText = [
+    "uuid".padEnd(8, " "),
+    "start".padEnd(15, " "),
+    "k".padEnd(2, " "),
+    "r".padEnd(2, " "),
+    "b".padEnd(7, " "),
+    "phase".padEnd(10, " "),
+    "progress",
+    "(Press 'q' to exit)",
+  ].join(" ");
+  const header = blessed.text({
+    parent: screen,
+    top: 0,
+    left: 0,
+    height: 1,
+    content: headerText,
+  });
   
   while(s = await loop.next(loopOption)){
     if(s.done){
@@ -282,25 +302,6 @@ async function watch(params: Record<string, string|boolean>){
     // Remove files whose last update time is larger than 24hours.
     files = files.filter(f => (Date.now() - f.stats.mtimeMs) < 86400000);
     
-    // render header
-    const headerText = [
-      "uuid".padEnd(8, " "),
-      "start".padEnd(15, " "),
-      "k".padEnd(2, " "),
-      "r".padEnd(2, " "),
-      "b".padEnd(7, " "),
-      "phase".padEnd(10, " "),
-      "progress",
-      "(Press 'q' to exit)",
-    ].join(" ");
-    const header = blessed.text({
-      parent: screen,
-      top: 0,
-      left: 0,
-      height: 1,
-      content: headerText,
-    });
-  
     const processedUuids: string[] = [];
     for await(const summary of getPlotterLogSummary(files, {unfinishedOnly: true})){
       if(!summary.uuid){
@@ -359,6 +360,21 @@ async function watch(params: Record<string, string|boolean>){
       }
       
       processedUuids.push(summary.uuid);
+    }
+    
+    if(!processedUuids.length && !noPlotTasksYet){
+      noPlotTasksYet = blessed.text({
+        parent: screen,
+        top: 2,
+        left: 4,
+        content: "## No plotting task found yet ##",
+      });
+      screen.render();
+    }
+    else if(processedUuids.length && noPlotTasksYet){
+      noPlotTasksYet.destroy();
+      noPlotTasksYet = null;
+      screen.render();
     }
     
     const savedUuids = Object.keys(uuidElementMap);
