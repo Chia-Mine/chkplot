@@ -328,27 +328,17 @@ function watch(params) {
                     outputs.push(`${summary.phase.padEnd(10, " ")}`);
                     const msg = outputs.join(" ");
                     if (!uuidElementMap[summary.uuid]) {
-                        const positionText = {
-                            top: nWip + 1,
-                            left: 0,
-                            bottom: null,
-                            right: null,
-                        };
                         const text = blessed.text({
                             parent: screen,
-                            position: positionText,
+                            top: nWip + 1,
+                            left: 0,
                             height: 1,
                             content: msg,
                         });
-                        const positionProgress = {
-                            top: nWip + 1,
-                            left: 50,
-                            bottom: null,
-                            right: null,
-                        };
                         const progress = blessed.progressbar({
                             parent: screen,
-                            position: positionProgress,
+                            top: nWip + 1,
+                            left: 50,
                             width: 20,
                             height: 1,
                             value: summary.progress,
@@ -362,7 +352,6 @@ function watch(params) {
                         });
                         progress.setProgress(summary.progress);
                         uuidElementMap[summary.uuid] = {
-                            resetTop: (top) => { positionText.top = top; positionProgress.top = top; },
                             text,
                             progress,
                         };
@@ -410,7 +399,8 @@ function watch(params) {
                 });
                 processedUuids.forEach((uuid, i) => {
                     const el = uuidElementMap[uuid];
-                    el.resetTop(i + 1);
+                    el.text.top = i + 1;
+                    el.progress.top = i + 1;
                 });
                 nWip = processedUuids.length;
                 screen.render();
