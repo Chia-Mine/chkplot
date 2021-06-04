@@ -264,7 +264,7 @@ async function watch(params: Record<string, string|boolean>){
   const uuidElementMap: Record<string, Element> = {};
   
   const loop = createTimerLoop();
-  const loopOption = {sleepMs: 3000, stop: false};
+  const loopOption = {sleepMs: 5000, stop: false};
   let s: IteratorResult<unknown, any>;
   
   let nWip = 0;
