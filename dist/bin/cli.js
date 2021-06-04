@@ -268,7 +268,9 @@ function watch(params) {
     return __awaiter(this, void 0, void 0, function* () {
         const blessed = yield Promise.resolve().then(() => require("blessed"));
         const { listPlotterLogFiles, getPlotterLogSummary, createTimerLoop, formatDate, } = yield Promise.resolve().then(() => require("../"));
-        const screen = blessed.screen();
+        const screen = blessed.screen({
+            smartCSR: true,
+        });
         // Quit on Escape, q, or Control-C.
         screen.key(['escape', 'q', 'C-c'], function (ch, key) {
             return process.exit(0);
@@ -279,7 +281,26 @@ function watch(params) {
         const loop = createTimerLoop();
         const loopOption = { sleepMs: 5000, stop: false };
         let s;
+        let noPlotTasksYet = null;
         let nWip = 0;
+        // render header
+        const headerText = [
+            "uuid".padEnd(8, " "),
+            "start".padEnd(15, " "),
+            "k".padEnd(2, " "),
+            "r".padEnd(2, " "),
+            "b".padEnd(7, " "),
+            "phase".padEnd(10, " "),
+            "progress",
+            "(Press 'q' to exit)",
+        ].join(" ");
+        const header = blessed.text({
+            parent: screen,
+            top: 0,
+            left: 0,
+            height: 1,
+            content: headerText,
+        });
         while (s = yield loop.next(loopOption)) {
             if (s.done) {
                 break;
@@ -290,24 +311,6 @@ function watch(params) {
             });
             // Remove files whose last update time is larger than 24hours.
             files = files.filter(f => (Date.now() - f.stats.mtimeMs) < 86400000);
-            // render header
-            const headerText = [
-                "uuid".padEnd(8, " "),
-                "start".padEnd(15, " "),
-                "k".padEnd(2, " "),
-                "r".padEnd(2, " "),
-                "b".padEnd(7, " "),
-                "phase".padEnd(10, " "),
-                "progress",
-                "(Press 'q' to exit)",
-            ].join(" ");
-            const header = blessed.text({
-                parent: screen,
-                top: 0,
-                left: 0,
-                height: 1,
-                content: headerText,
-            });
             const processedUuids = [];
             try {
                 for (var _d = (e_5 = void 0, __asyncValues(getPlotterLogSummary(files, { unfinishedOnly: true }))), _e; _e = yield _d.next(), !_e.done;) {
@@ -316,7 +319,7 @@ function watch(params) {
                         continue;
                     }
                     const outputs = [];
-                    const uuid = (summary.uuid || "").split("-")[0];
+                    const uuid = summary.uuid.split("-")[0];
                     outputs.push(uuid.padEnd(8, " "));
                     outputs.push(`${summary.start_date ? formatDate(summary.start_date) : ""}`);
                     outputs.push(`${summary.k}`);
@@ -325,17 +328,27 @@ function watch(params) {
                     outputs.push(`${summary.phase.padEnd(10, " ")}`);
                     const msg = outputs.join(" ");
                     if (!uuidElementMap[summary.uuid]) {
-                        const text = blessed.text({
-                            parent: screen,
+                        const positionText = {
                             top: nWip + 1,
                             left: 0,
+                            bottom: null,
+                            right: null,
+                        };
+                        const text = blessed.text({
+                            parent: screen,
+                            position: positionText,
                             height: 1,
                             content: msg,
                         });
-                        const progress = blessed.progressbar({
-                            parent: screen,
+                        const positionProgress = {
                             top: nWip + 1,
                             left: 50,
+                            bottom: null,
+                            right: null,
+                        };
+                        const progress = blessed.progressbar({
+                            parent: screen,
+                            position: positionProgress,
                             width: 20,
                             height: 1,
                             value: summary.progress,
@@ -349,7 +362,7 @@ function watch(params) {
                         });
                         progress.setProgress(summary.progress);
                         uuidElementMap[summary.uuid] = {
-                            resetTop: (top) => { text.top = top; progress.top = top; },
+                            resetTop: (top) => { positionText.top = top; positionProgress.top = top; },
                             text,
                             progress,
                         };
@@ -372,6 +385,20 @@ function watch(params) {
                 }
                 finally { if (e_5) throw e_5.error; }
             }
+            if (!processedUuids.length && !noPlotTasksYet) {
+                noPlotTasksYet = blessed.text({
+                    parent: screen,
+                    top: 2,
+                    left: 4,
+                    content: "## No plotting task found yet ##",
+                });
+                screen.render();
+            }
+            else if (processedUuids.length && noPlotTasksYet) {
+                noPlotTasksYet.destroy();
+                noPlotTasksYet = null;
+                screen.render();
+            }
             const savedUuids = Object.keys(uuidElementMap);
             const removedUuids = savedUuids.filter(uuid => !processedUuids.includes(uuid));
             if (removedUuids.length > 0) {
@@ -379,13 +406,14 @@ function watch(params) {
                     const el = uuidElementMap[uuid];
                     el.text.destroy();
                     el.progress.destroy();
-                    nWip--;
                     delete uuidElementMap[uuid];
                 });
                 processedUuids.forEach((uuid, i) => {
                     const el = uuidElementMap[uuid];
-                    el.resetTop(i);
+                    el.resetTop(i + 1);
                 });
+                nWip = processedUuids.length;
+                screen.render();
             }
         }
     });
