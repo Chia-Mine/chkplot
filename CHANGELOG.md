@@ -1,6 +1,7 @@
 ## [0.0.3]
 ### Fixed
 - Fixed an issue where it renders header unnecessarily every loop.
+- Fixed an issue where it does not render at expected position when plot task count changes on `chkplot watch` command.
 
 ### Added
 - Added no plot task message
