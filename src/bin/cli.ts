@@ -258,7 +258,6 @@ async function watch(params: Record<string, string|boolean>){
   screen.render();
   
   type Element = {
-    resetTop: (top: number) => void;
     progress: Widgets.ProgressBarElement;
     text: Widgets.TextElement;
   };
@@ -320,28 +319,18 @@ async function watch(params: Record<string, string|boolean>){
       const msg = outputs.join(" ");
       
       if(!uuidElementMap[summary.uuid]){
-        const positionText = {
-          top: nWip+1,
-          left: 0,
-          bottom: null,
-          right: null,
-        };
         const text = blessed.text({
           parent: screen,
-          position: positionText as any,
+          top: nWip+1,
+          left: 0,
           height: 1,
           content: msg,
         });
         
-        const positionProgress = {
-          top: nWip+1,
-          left: 50,
-          bottom: null,
-          right: null,
-        };
         const progress = blessed.progressbar({
           parent: screen,
-          position: positionProgress as any,
+          top: nWip+1,
+          left: 50,
           width: 20,
           height: 1,
           value: summary.progress,
@@ -356,7 +345,6 @@ async function watch(params: Record<string, string|boolean>){
         progress.setProgress(summary.progress);
         
         uuidElementMap[summary.uuid] = {
-          resetTop: (top: number) => {positionText.top = top; positionProgress.top = top; },
           text,
           progress,
         };
@@ -400,7 +388,8 @@ async function watch(params: Record<string, string|boolean>){
       });
       processedUuids.forEach((uuid, i) => {
         const el = uuidElementMap[uuid];
-        el.resetTop(i+1);
+        el.text.top = i+1;
+        el.progress.top = i+1;
       });
       nWip = processedUuids.length;
       screen.render();
