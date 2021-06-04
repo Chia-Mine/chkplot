@@ -106,7 +106,7 @@ Realtime plot progress monitor. Press 'q' to exit.
 ```shell
 $ npx chkplot watch
 ```
-![](https://github.com/Chia-Mine/chkplot/blob/v0.0.1/example/chkplot_watch.png)
+Note: Terminal output sample is includes in demo movie below.
 
 
 ### Demo
