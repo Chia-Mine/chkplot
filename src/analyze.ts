@@ -147,7 +147,7 @@ export function summarize(log: string, uuid?: string){
   return {
     uuid,
     id: parsedLog.params.id,
-    start_date: startDate ? startDate.toLocaleString() : null,
+    start_date: startDate ? startDate : null,
     k: parsedLog.params.k,
     r: parsedLog.params.threads,
     b: parsedLog.params.buffer_size,
@@ -164,6 +164,16 @@ export function summarize(log: string, uuid?: string){
     phase,
     finish_date: endDate ? endDate.toLocaleString() : null,
   };
+}
+
+export function formatDate(d: Date){
+  const year = d.getFullYear();
+  const month = (d.getMonth()+1).toString().padStart(2, "0");
+  const day = d.getDate().toString().padStart(2, "0");
+  const hour = d.getHours().toString().padStart(2, "0");
+  const min = d.getMinutes().toString().padStart(2, "0");
+  const sec = d.getSeconds().toString().padStart(2, "0");
+  return `${year}${month}${day}_${hour}${min}${sec}`;
 }
 
 export function printSummary(summary: ReturnType<typeof summarize>){
@@ -188,6 +198,9 @@ export function printSummary(summary: ReturnType<typeof summarize>){
     else if (Array.isArray(val)){
       formattedValue = `${val[0]}${val[1]}`;
     }
+    else if(val instanceof Date){
+      formattedValue = `${formatDate(val)}`;
+    }
     else if(val && typeof val === "object"){
       formattedValue = `${val.hour.toString().padStart(2, "0")}:${val.minute.toString().padStart(2, "0")}:${val.minute.toString().padStart(2, "0")}`;
     }
@@ -196,17 +209,34 @@ export function printSummary(summary: ReturnType<typeof summarize>){
   }
 }
 
-export function printProgress(summary: ReturnType<typeof summarize>){
-  const printing =
-    `[${(summary.uuid||"").padEnd(36, " ")}]`
-    + ` ${summary.progress}%`.padEnd(5, " ")
-    + ` ${summary.phase}`
-    + ` ${summary.start_date}`
-    + ` k:${summary.k}`
-    + ` r:${summary.r}`
-    + ` b:${summary.b?.join("")}`
-    + ` r:${summary.r}`
-    + ` t:${summary.t}`
-    + ` d:${summary.d || "?"}`
-  console.log(printing);
+export type TPrintProgressOption = {
+  shortUUID: boolean;
+  noTempDir: boolean;
+  noFinalDir: boolean;
+};
+export function printProgress(summary: ReturnType<typeof summarize>, option?: Partial<TPrintProgressOption>){
+  const output: string[] = [];
+  
+  if(option && option.shortUUID){
+    const uuid = (summary.uuid||"").split("-")[0];
+    output.push(uuid.padEnd(8, " "));
+  }
+  else{
+    output.push(`${(summary.uuid||"").padEnd(36, " ")}`);
+  }
+  
+  output.push(`${summary.progress}%`.padEnd(5, " "));
+  output.push(`${summary.phase}`);
+  output.push(`${summary.start_date ? formatDate(summary.start_date) : ""}`);
+  output.push(`k:${summary.k}`);
+  output.push(`r:${summary.r}`);
+  output.push(`b:${summary.b?.join("")}`);
+  if(!option || !option.noTempDir){
+    output.push(`t:${summary.t}`);
+  }
+  if(!option || !option.noFinalDir){
+    output.push(`d:${summary.d || "?"}`);
+  }
+  
+  console.log(output.join(" "));
 }
