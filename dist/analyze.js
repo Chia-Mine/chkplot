@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.printProgress = exports.printSummary = exports.summarize = exports.compileTime = exports.parseTime = exports.getPhase2CPUSeries = exports.getPhase2TimeSeries = exports.getPhase1CPUSeries = exports.getPhase1TimeSeries = exports.getProgress = exports.summarizeSizeUnit = exports.resolveSizeUnit = void 0;
+exports.printProgress = exports.printSummary = exports.formatDate = exports.summarize = exports.compileTime = exports.parseTime = exports.getPhase2CPUSeries = exports.getPhase2TimeSeries = exports.getPhase1CPUSeries = exports.getPhase1TimeSeries = exports.getProgress = exports.summarizeSizeUnit = exports.resolveSizeUnit = void 0;
 const parse_1 = require("./parse");
 function resolveSizeUnit(size) {
     let p = 0;
@@ -162,7 +162,7 @@ function summarize(log, uuid) {
     return {
         uuid,
         id: parsedLog.params.id,
-        start_date: startDate ? startDate.toLocaleString() : null,
+        start_date: startDate ? startDate : null,
         k: parsedLog.params.k,
         r: parsedLog.params.threads,
         b: parsedLog.params.buffer_size,
@@ -181,6 +181,16 @@ function summarize(log, uuid) {
     };
 }
 exports.summarize = summarize;
+function formatDate(d) {
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const day = d.getDate().toString().padStart(2, "0");
+    const hour = d.getHours().toString().padStart(2, "0");
+    const min = d.getMinutes().toString().padStart(2, "0");
+    const sec = d.getSeconds().toString().padStart(2, "0");
+    return `${year}${month}${day}_${hour}${min}${sec}`;
+}
+exports.formatDate = formatDate;
 function printSummary(summary) {
     let longestKeyName = "";
     for (const key in summary) {
@@ -201,6 +211,9 @@ function printSummary(summary) {
         else if (Array.isArray(val)) {
             formattedValue = `${val[0]}${val[1]}`;
         }
+        else if (val instanceof Date) {
+            formattedValue = `${formatDate(val)}`;
+        }
         else if (val && typeof val === "object") {
             formattedValue = `${val.hour.toString().padStart(2, "0")}:${val.minute.toString().padStart(2, "0")}:${val.minute.toString().padStart(2, "0")}`;
         }
@@ -208,18 +221,28 @@ function printSummary(summary) {
     }
 }
 exports.printSummary = printSummary;
-function printProgress(summary) {
+function printProgress(summary, option) {
     var _a;
-    const printing = `[${(summary.uuid || "").padEnd(36, " ")}]`
-        + ` ${summary.progress}%`.padEnd(5, " ")
-        + ` ${summary.phase}`
-        + ` ${summary.start_date}`
-        + ` k:${summary.k}`
-        + ` r:${summary.r}`
-        + ` b:${(_a = summary.b) === null || _a === void 0 ? void 0 : _a.join("")}`
-        + ` r:${summary.r}`
-        + ` t:${summary.t}`
-        + ` d:${summary.d || "?"}`;
-    console.log(printing);
+    const output = [];
+    if (option && option.shortUUID) {
+        const uuid = (summary.uuid || "").split("-")[0];
+        output.push(uuid.padEnd(8, " "));
+    }
+    else {
+        output.push(`${(summary.uuid || "").padEnd(36, " ")}`);
+    }
+    output.push(`${summary.progress}%`.padEnd(5, " "));
+    output.push(`${summary.phase}`);
+    output.push(`${summary.start_date ? formatDate(summary.start_date) : ""}`);
+    output.push(`k:${summary.k}`);
+    output.push(`r:${summary.r}`);
+    output.push(`b:${(_a = summary.b) === null || _a === void 0 ? void 0 : _a.join("")}`);
+    if (!option || !option.noTempDir) {
+        output.push(`t:${summary.t}`);
+    }
+    if (!option || !option.noFinalDir) {
+        output.push(`d:${summary.d || "?"}`);
+    }
+    console.log(output.join(" "));
 }
 exports.printProgress = printProgress;

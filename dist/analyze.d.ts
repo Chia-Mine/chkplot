@@ -15,7 +15,7 @@ export declare function compileTime(parsedTime: ReturnType<typeof parseTime>): n
 export declare function summarize(log: string, uuid?: string): {
     uuid: string | undefined;
     id: string | undefined;
-    start_date: string | null;
+    start_date: Date | null;
     k: number | undefined;
     r: number | undefined;
     b: TSize | undefined;
@@ -60,5 +60,11 @@ export declare function summarize(log: string, uuid?: string): {
     phase: string;
     finish_date: string | null;
 };
+export declare function formatDate(d: Date): string;
 export declare function printSummary(summary: ReturnType<typeof summarize>): void;
-export declare function printProgress(summary: ReturnType<typeof summarize>): void;
+export declare type TPrintProgressOption = {
+    shortUUID: boolean;
+    noTempDir: boolean;
+    noFinalDir: boolean;
+};
+export declare function printProgress(summary: ReturnType<typeof summarize>, option?: Partial<TPrintProgressOption>): void;
