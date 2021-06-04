@@ -1,10 +1,11 @@
-## [0.0.1]
+## [0.0.1] - 2021-06-04
 ### Changed
 - Updated CLI usage text
 
 ### Added
 - Added new `chkplot watch` command
 - Added gif demo movie to README
+- Added `-c` option to `chkplot list` and `chkplot wip`
 
 ## [0.0.0] - 2021-06-02
 Initial release.
