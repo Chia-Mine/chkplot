@@ -341,6 +341,7 @@ async function watch(params: Record<string, string|boolean>){
     files = files.filter(f => (Date.now() - f.stats.mtimeMs) < 86400000);
     
     const processedUuids: string[] = [];
+    let hasNewPlotLog = false;
     for await(const summary of getPlotterLogSummary(files, {unfinishedOnly: true})){
       if(!summary.uuid){
         continue;
@@ -387,8 +388,8 @@ async function watch(params: Record<string, string|boolean>){
           progress,
         };
   
-        screen.render();
         nWip++;
+        hasNewPlotLog = true;
       }
       else{
         uuidElementMap[summary.uuid].text.setContent(msg);
@@ -424,6 +425,15 @@ async function watch(params: Record<string, string|boolean>){
         el.progress.destroy();
         delete uuidElementMap[uuid];
       });
+      processedUuids.forEach((uuid, i) => {
+        const el = uuidElementMap[uuid];
+        el.text.top = i+1;
+        el.progress.top = i+1;
+      });
+      nWip = processedUuids.length;
+      screen.render();
+    }
+    else if(hasNewPlotLog){
       processedUuids.forEach((uuid, i) => {
         const el = uuidElementMap[uuid];
         el.text.top = i+1;
