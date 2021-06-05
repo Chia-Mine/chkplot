@@ -76,4 +76,6 @@ export async function* getPlotterLogSummary(
       i++;
     }
   }
+  
+  return;
 }

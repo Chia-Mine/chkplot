@@ -295,10 +295,6 @@ async function watch(params: Record<string, string|boolean>){
     }
   
     let files = await listPlotterLogFiles();
-    files.sort((a, b) => {
-      return b.stats.mtimeMs - a.stats.mtimeMs;
-    });
-  
     // Remove files whose last update time is larger than 24hours.
     files = files.filter(f => (Date.now() - f.stats.mtimeMs) < 86400000);
     
