@@ -12,24 +12,28 @@ yarn add chkplot
 
 ## Command line
 ```
-npx chkplot list [-n <N>] [-c]
+npx chkplot list [-n <N>] [-c] [-d <plot log directory>]
     Show available plot log files.
     -n: If you specify -n 3, then top 3 of most recent started plotting progress/result will be shown.
     -c: Compact output
+    -d: Specifys plot log directory. Default is $CHIA_HOME/mainnet/plotter.
 
-npx chkplot wip [-n <N>] [-c]
+npx chkplot wip [-n <N>] [-c] [-d <plot log directory>]
     Show plotting progress from plotter log files.
     -n: If you specify -n 10, then top 10 of most recent started plotting progress will be shown.
     -c: Compact output
+    -d: Specifys plot log directory. Default is $CHIA_HOME/mainnet/plotter.
 
-npx chkplot summary [-u <uuid>|-n <N>|-a]
+npx chkplot summary [-u <uuid>|-n <N>|-a] [-d <plot log directory>]
     Show plot summary.
     -u: Specify plot uuid for summary. uuid can be listed by 'npx chkplot list'
     -n: If you specify -n 3, then top 3 of most recent started plotting log summary will be shown.
     -a: Show all available plot log summary
+    -d: Specifys plot log directory. Default is $CHIA_HOME/mainnet/plotter.
 
-npx chkplot watch
+npx chkplot watch [-d <plot log directory>]
     Realtime monitor for plot progress.
+    -d: Specifys plot log directory. Default is $CHIA_HOME/mainnet/plotter.
 ```
 * If you globally install `chkplot` such as `npm install -g chkplot` or `yarn global add chkplot`,  
   you can directly run above command without `npx` command prefix.  
