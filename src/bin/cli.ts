@@ -4,22 +4,28 @@ import type {Widgets} from "blessed";
 function usage(){
   const exeCommand = "npx chkplot"
   return `Usage:
-${exeCommand} list [-n <N>]
+${exeCommand} list [-n <N>] [-c] [-d <Plot log directory>]
     Show available plot progress/result from plotter log files.
     -n: If you specify -n 3, then top 3 of most recent plotting progress/result will be shown.
+    -c: Show result in compact format
+    -d: Specifys plot log directory. Default is $CHIA_HOME/mainnet/plotter.
     
-${exeCommand} wip [-n <N>]
+${exeCommand} wip [-n <N>] [-c] [-d <Plot log directory>]
     Show unfinished plotting progress from plotter log files.
     -n: If you specify -n 10, then top 10 of most recent plotting progress will be shown.
+    -c: Show result in compact format
+    -d: Specifys plot log directory. Default is $CHIA_HOME/mainnet/plotter.
 
-${exeCommand} summary [-u <uuid>|-n <N>|-a]
+${exeCommand} summary [-u <uuid>|-n <N>|-a] [-d <Plot log directory>]
     Show plot summary.
     -u: Specify plot uuid for summary. uuid can be listed by '${exeCommand} list'
     -n: If you specify -n 3, then top 3 of most recent plotting log summary will be shown.
     -a: Show all available plot log summary
+    -d: Specifys plot log directory. Default is $CHIA_HOME/mainnet/plotter.
 
-${exeCommand} watch
+${exeCommand} watch [-d <Plot log directory>]
     Realtime monitor for plot progress.
+    -d: Specifys plot log directory. Default is $CHIA_HOME/mainnet/plotter.
 `;
 }
 
@@ -100,13 +106,22 @@ async function list(params: Record<string, string|boolean>){
     compact = true;
   }
   
+  let directory: string|undefined;
+  if(typeof params["-d"] === "string"){
+    directory = params["-d"];
+  }
+  else if(params["-d"]){
+    console.error(`Invalid directory: ${params["-d"]}`);
+    return;
+  }
+  
   const {
     listPlotterLogFiles,
     getPlotterLogSummary,
     printProgress,
   } = await import("../");
   
-  const files = await listPlotterLogFiles();
+  const files = await listPlotterLogFiles(directory);
   files.sort((a, b) => {
     return b.stats.mtimeMs - a.stats.mtimeMs;
   });
@@ -138,13 +153,22 @@ async function wip(params: Record<string, string|boolean>){
     compact = true;
   }
   
+  let directory: string|undefined;
+  if(typeof params["-d"] === "string"){
+    directory = params["-d"];
+  }
+  else if(params["-d"]){
+    console.error(`Invalid directory: ${params["-d"]}`);
+    return;
+  }
+  
   const {
     listPlotterLogFiles,
     getPlotterLogSummary,
     printProgress,
   } = await import("../");
   
-  const files = await listPlotterLogFiles();
+  const files = await listPlotterLogFiles(directory);
   const summaries = getPlotterLogSummary(files, {unfinishedOnly: true, n});
   for await (const s of summaries){
     printProgress(s, compact ? {shortUUID: true, noTempDir: true, noFinalDir: true} : undefined);
@@ -202,13 +226,22 @@ async function summary(params: Record<string, string|boolean>){
     return;
   }
   
+  let directory: string|undefined;
+  if(typeof params["-d"] === "string"){
+    directory = params["-d"];
+  }
+  else if(params["-d"]){
+    console.error(`Invalid directory: ${params["-d"]}`);
+    return;
+  }
+  
   const {
     listPlotterLogFiles,
     getPlotterLogSummary,
     printSummary,
   } = await import("../");
   
-  const files = await listPlotterLogFiles();
+  const files = await listPlotterLogFiles(directory);
   
   if(u){
     for(const f of files){
@@ -245,6 +278,15 @@ async function watch(params: Record<string, string|boolean>){
     createTimerLoop,
     formatDate,
   } = await import("../");
+  
+  let directory: string|undefined;
+  if(typeof params["-d"] === "string"){
+    directory = params["-d"];
+  }
+  else if(params["-d"]){
+    console.error(`Invalid directory: ${params["-d"]}`);
+    return;
+  }
   
   const screen = blessed.screen({
     smartCSR: true,
@@ -294,7 +336,7 @@ async function watch(params: Record<string, string|boolean>){
       break;
     }
   
-    let files = await listPlotterLogFiles();
+    let files = await listPlotterLogFiles(directory);
     // Remove files whose last update time is larger than 24hours.
     files = files.filter(f => (Date.now() - f.stats.mtimeMs) < 86400000);
     
