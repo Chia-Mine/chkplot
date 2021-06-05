@@ -88,6 +88,7 @@ function getPlotterLogSummary(fileStats, option) {
                 i++;
             }
         }
+        return yield __await(void 0);
     });
 }
 exports.getPlotterLogSummary = getPlotterLogSummary;

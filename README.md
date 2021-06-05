@@ -12,26 +12,30 @@ yarn add chkplot
 
 ## Command line
 ```
-npx chkplot list [-n <N>] [-c]
+npx chkplot list [-n <N>] [-c] [-d <plot log directory>]
     Show available plot log files.
     -n: If you specify -n 3, then top 3 of most recent started plotting progress/result will be shown.
     -c: Compact output
+    -d: Specifys plot log directory. Default is $CHIA_HOME/mainnet/plotter.
 
-npx chkplot wip [-n <N>] [-c]
+npx chkplot wip [-n <N>] [-c] [-d <plot log directory>]
     Show plotting progress from plotter log files.
     -n: If you specify -n 10, then top 10 of most recent started plotting progress will be shown.
     -c: Compact output
+    -d: Specifys plot log directory. Default is $CHIA_HOME/mainnet/plotter.
 
-npx chkplot summary [-u <uuid>|-n <N>|-a]
+npx chkplot summary [-u <uuid>|-n <N>|-a] [-d <plot log directory>]
     Show plot summary.
     -u: Specify plot uuid for summary. uuid can be listed by 'npx chkplot list'
     -n: If you specify -n 3, then top 3 of most recent started plotting log summary will be shown.
     -a: Show all available plot log summary
+    -d: Specifys plot log directory. Default is $CHIA_HOME/mainnet/plotter.
 
-npx chkplot watch
+npx chkplot watch [-d <plot log directory>]
     Realtime monitor for plot progress.
+    -d: Specifys plot log directory. Default is $CHIA_HOME/mainnet/plotter.
 ```
-* If you globally install `chkplot` such as `npm install -g chkplot` or `yarn add global chkplot`,  
+* If you globally install `chkplot` such as `npm install -g chkplot` or `yarn global add chkplot`,  
   you can directly run above command without `npx` command prefix.  
   
   **Example:**
@@ -41,18 +45,16 @@ npx chkplot watch
 
 ### chkplot list
 ```shell
-$ npx chkplot list -n 4
+$ chkplot list -n 4
 
-npx: installed 1 in 1.735s
 5f4f50c2-c4f4-441c-be73-8d72af6342f6 31.3% phase2 20210604_123039 k:32 r:2 b:4600MiB t:E:\chia_plot d:?
 a065f74d-cf80-4784-99a1-627dd58fac35 31.4% phase2 20210604_123039 k:32 r:2 b:4600MiB t:D:\chia_plot d:?
 e613f9c7-dfc7-4e4d-8829-15945c73e7f3 100%  complete 20210604_003946 k:32 r:4 b:4600MiB t:E:\chia_plot d:?
 eba1de83-12be-4c7e-8936-c92da581e4d2 100%  complete 20210604_003946 k:32 r:4 b:4600MiB t:D:\chia_plot d:?
 ```
 ```shell
-$ npx chkplot list -n 4 -c
+$ chkplot list -n 4 -c
 
-npx: installed 1 in 1.735s
 5f4f50c2 31.4% phase2 20210604_123039 k:32 r:2 b:4600MiB
 a065f74d 31.4% phase2 20210604_123039 k:32 r:2 b:4600MiB
 e613f9c7 100%  complete 20210604_003946 k:32 r:4 b:4600MiB
@@ -62,25 +64,22 @@ eba1de83 100%  complete 20210604_003946 k:32 r:4 b:4600MiB
 ### chkplot wip
 Show only work in progress plotting tasks
 ```shell
-$ npx chkplot wip
+$ chkplot wip
 
-npx: installed 1 in 1.735s
 5f4f50c2-c4f4-441c-be73-8d72af6342f6 31.4% phase2 20210604_123039 k:32 r:2 b:4600MiB t:E:\chia_plot d:?
 a065f74d-cf80-4784-99a1-627dd58fac35 31.4% phase2 20210604_123039 k:32 r:2 b:4600MiB t:D:\chia_plot d:?
 ```
 ```shell
-$ npx chkplot wip -c
+$ chkplot wip -c
 
-npx: installed 1 in 1.735s
 5f4f50c2 31.4% phase2 20210604_123039 k:32 r:2 b:4600MiB
 a065f74d 31.4% phase2 20210604_123039 k:32 r:2 b:4600MiB
 ```
 
 ### chkplot summary
 ```shell
-$ npx chkplot summary -u e613f9c7
+$ chkplot summary -u e613f9c7
 
-npx: installed 1 in 1.735s
 uuid                : e613f9c7-dfc7-4e4d-8829-15945c73e7f3
 id                  : f8a891124b31847bcc3dceaae7ab740ec50ebbf659520a1e335d47e860106772
 start_date          : 20210604_003946
@@ -104,7 +103,7 @@ finish_date         : 2021-6-4 5:14:50
 ### chkplot watch
 Realtime plot progress monitor. Press 'q' to exit.
 ```shell
-$ npx chkplot watch
+$ chkplot watch
 ```
 Note: Terminal output sample is includes in demo movie below.
 
