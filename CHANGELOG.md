@@ -5,6 +5,7 @@
 
 ### Added
 - Added no plot task message
+- Added `-d` option to specify plot log directory.
 
 ## [0.0.2] - 2021-06-04
 ### Fixed
